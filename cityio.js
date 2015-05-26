@@ -199,6 +199,7 @@ module.exports = function(world){
 
 	//add all buildings from list
 	var buildings = data.get().splice(0,15000);
+	// var buildings = data.get();
 	for( var i = 0 ; i < buildings.length ; i++ ){
 
 		this.render.push(function(){
@@ -1025,7 +1026,6 @@ module.exports = function(fov, aspect, near, far, group){
 				}
 
 				//lerp and ease
-				debugger
 				var eased = animation.ease(progress, 0, 1, 1);
 				var position = animation.position.getPointAt(eased);
 				var look = animation.look.getPointAt(eased);
@@ -1033,8 +1033,6 @@ module.exports = function(fov, aspect, near, far, group){
 				//do updating
 				camera.position.copy(position);
 				camera.lookAt(look);
-
-				console.log(position);
 
 				//save current pos
 				current = position.clone();
@@ -1596,16 +1594,59 @@ module.exports = function(){
 	var end = false;
 	var clock = new THREE.Clock();
 
-	this.add = function(fn){
+	var createProcess = function(a1, a2){
 
-		var id = THREE.Math.generateUUID();
+		var id, fn;
 
-		list.push({
+		if(a1 instanceof Function){
+			id = THREE.Math.generateUUID();
+			fn = a1;
+		} else{
+			id = a1;
+			fn = a2;
+
+			//prevent double id's
+			this.remove(id);
+		}
+
+		return {
 			'task': fn,
 			'id': id
-		});
+		};
 
-		return id;
+	}.bind(this);
+
+	this.add = function(a1, a2){
+
+		var _process = createProcess(a1, a2);
+		list.push(_process);
+		return _process.id;
+
+	};
+
+	this.addBefore = function(before, a1, a2){
+
+		var _process = createProcess(a1, a2);
+
+		//add to correct place
+		var index = list.indexOf(before);
+		list.splice(index, 0, _process);
+
+		return _process.id;
+
+	};
+
+	this.addAfter = function(a1, a2, before){
+
+		before = before || a2;
+		var _process = createProcess(a1, a2);
+
+		//add to correct place
+		var index = list.indexOf(before) + 1;
+		list.splice(index, 0, _process);
+
+		return _process.id;
+
 	};
 
 	this.remove = function(id){
@@ -1702,8 +1743,8 @@ module.exports = function(canvas, projection, FXlist){
 	this.render = new IO.classes.RenderManager();
 
 	//add to the list of renderable function
-	this.render.add(this.camera.render, this.camera.pause);
-	this.render.add(this.FX.render);
+	this.render.add('controls', this.camera.render);
+	this.render.add('fx', this.FX.render);
 	// this.render.add(this.renderer.render);
 
 	//add preloader
@@ -2869,6 +2910,9 @@ var Geo = require('./geo.js');
 
 module.exports = function(point1, point2){
 
+    point1 = new Geo() || point1;
+    point2 = new Geo() || point2;
+
     //creat points
     this.ne = point1.clone();
     this.nw = new Geo(point1.lat, point2.lon);
@@ -2880,11 +2924,13 @@ module.exports = function(point1, point2){
     };
 
     this.inBox = function(point){
-        //todo
+        return
+            point.lat > this.ne.lat && point.lat < this.nw.lat &&
+            point.lon > this.sw.lon && point.lon < this.nw.lon;
     };
 
     this.getCenter = function(){
-        return point1.lerp(point2, 0.5);
+        return this.ne.interpolate(this.sw, 0.5);
     };
 
     this.getRadius = function(){
@@ -2892,6 +2938,28 @@ module.exports = function(point1, point2){
             'center': this.getCenter(),
             'radius': point1.distanceTo(point2)
         };
+    };
+
+    //radius needs to be in meters
+    this.fromRadius = function(point, radius){
+
+        // http://williams.best.vwh.net/avform.htm#LL
+        // var tc = point.getCourse();
+        // lat =asin(sin(lat1)*cos(d)+cos(lat1)*sin(d)*cos(tc))
+        // dlon=atan2(sin(tc)*sin(d)*cos(lat1),cos(d)-sin(lat1)*sin(lat))
+        // lon=mod( lon1-dlon +pi,2*pi )-pi
+
+        // http://stackoverflow.com/a/1708048/2836428
+        // double R = 6371;  // earth radius in km
+        // double radius = 50; // km
+        // double x1 = lon - Math.toDegrees(radius/R/Math.cos(Math.toRadians(lat)));
+        // double x2 = lon + Math.toDegrees(radius/R/Math.cos(Math.toRadians(lat)));
+        // double y1 = lat + Math.toDegrees(radius/R);
+        // double y2 = lat - Math.toDegrees(radius/R);
+
+        var R = 6371;
+        radius = radius / 1000; //convert to km
+
     };
 
     this.getTiles = function(amount){
@@ -3327,12 +3395,12 @@ var Geo = function(lat, lon, srs){
             case 'feet':
             case 'ft':
                 altitude *= 0.32808399;
-            break
+            break;
 
             case 'miles':
             case 'mi':
                 altitude *= 0.1609344;
-            break
+            break;
 
             case 'km':
             case 'kilometers':
@@ -3353,7 +3421,7 @@ var Geo = function(lat, lon, srs){
         return pixelScale * this.altitude;
     };
 
-    this.distanceTo = function(geo){
+    this.distanceTo = function(geo, unit){
 
         //http://stackoverflow.com/questions/639695/how-to-convert-latitude-or-longitude-to-meters
         var R = 6378.137; // Radius of earth in KM
@@ -3364,14 +3432,82 @@ var Geo = function(lat, lon, srs){
         Math.sin(dLon/2) * Math.sin(dLon/2);
         var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
         var d = R * c;
-        return d * 1000; // meters
+
+        switch(unit){
+
+            //nautical miles
+            case 'nm':
+            case 'nmi':
+                return d * 0.539956803;
+
+            //km
+            case 'km':
+                return d;
+
+            //meters
+            case 'm':
+            default:
+                return d*1000;
+
+        }
+
+        // return d * 1000; // meters
 
     };
 
-    //linear interpolate to position (alpha between 0,1)
-    this.lerp = function(destination, alpha){
-        var lat = this.lat * (1 - alpha) + destination.lat * alpha;
-		var lon = this.lon * (1 - alpha) + destination.lon * alpha;
+    this.inRadius = function(radius, point){
+        return this.distanceTo(point) < radius;
+    };
+
+    this.getRadians = function(){
+
+        var point = this.clone();
+        point.convert('EPSG:4326');
+
+        return {
+            lat: (point.lat * (Math.PI / 180)),
+            lon: (point.lon * (Math.PI / 180))
+        };
+
+    };
+
+    this.getCourse = function(destination){
+
+        var d = this.distanceTo(destination, 'nm');
+
+        if ( Math.sin( destination.lon - this.lon ) < 0 ){
+
+            return Math.acos((Math.sin(destination.lat)-Math.sin(this.lat)*Math.cos(d))/(Math.sin(d)*Math.cos(this.lat)));
+
+        } else{
+
+            return 2*Math.PI-Math.acos((Math.sin(destination.lat)-Math.sin(this.lat)*Math.cos(d))/(Math.sin(d)*Math.cos(this.lat)));
+
+        }
+
+    };
+
+    //interpolate to position (alpha between 0,1)
+    this.interpolate = function(destination, alpha){
+
+        var start = this.getRadians();
+        var end = destination.getRadians();
+
+        //http://williams.best.vwh.net/avform.htm#Intermediate
+        // var d = Math.acos(Math.sin(start.lat)*Math.sin(end.lat)+Math.cos(start.lat)*Math.cos(end.lat)*Math.cos(start.lon-end.lon))
+        var d = this.distanceTo(destination, 'nm');
+        var A = Math.sin( (1-alpha) * d ) / Math.sin(d);
+        var B = Math.sin( alpha * d ) / Math.sin(d);
+        var x = A * Math.cos( start.lat ) * Math.cos( start.lon ) + B * Math.cos( end.lat ) * Math.cos( end.lon );
+        var y = A * Math.cos( start.lat ) * Math.sin( start.lon ) + B * Math.cos( end.lat ) * Math.sin( end.lon );
+        var z = A * Math.sin( start.lat ) + B * Math.sin( end.lat );
+
+        var lat = Math.atan2( z, Math.sqrt( Math.pow(x,2)+Math.pow(y,2) ) );
+        var lon = Math.atan2( y, x );
+
+        lat = (180.0 * (lat / Math.PI))
+        lon = (180.0 * (lon / Math.PI))
+
 		return new Geo(lat, lon);
     };
 
@@ -3379,7 +3515,7 @@ var Geo = function(lat, lon, srs){
 
         //convert to another SRS when needed
         if(srs != this.srs){
-            var coord = proj4(this.srs, srs, [this.lat, this.lon]);
+            var coord = proj4(this.srs, srs, this.toArray());
             this.lat = coord[0];
             this.lon = coord[1];
             this.srs = srs;
@@ -3389,16 +3525,17 @@ var Geo = function(lat, lon, srs){
     };
 
     this.round = function(decimal){
-        if(!decimal){
-            this.lat = Math.round(this.lat);
-            this.lon = Math.round(this.lon);
-        } else {
-            //todo
-        }
+        decimal = decimal || 3;
+        this.lat = parseFloat(this.lat).toFixed(decimal);
+        this.lon = parseFloat(this.lon).toFixed(decimal);
     };
 
     this.equals = function(geo){
-        return this.lat === geo.lat && this.lon === geo.lon;
+        return
+            this.lat === geo.lat &&
+            this.lon === geo.lon &&
+            this.srs === geo.srs &&
+            this.altitude === geo.altitude;
     }
 
     this.clone = function(){
@@ -3414,6 +3551,9 @@ var Geo = function(lat, lon, srs){
     this.copy = function(geo){
         this.lat = geo.lat;
         this.lon = geo.lon;
+        this.srs = geo.srs;
+
+        return this;
     };
 
     this.fromArray = function(pos){

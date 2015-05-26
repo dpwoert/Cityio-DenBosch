@@ -8,7 +8,7 @@ var init = function(){
     var projection = new IO.classes.Projection(center, 22);
 
     //create 3d world
-    var world = new IO.classes.World(element, projection, ['tiltShift']);
+    var world = new IO.classes.World(element, projection, ['tiltShift','blurredMenu']);
     // var world = new IO.classes.World(element, projection);
     window.world = world;
 
