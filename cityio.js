@@ -1709,6 +1709,9 @@ module.exports = function(canvas, projection, FXlist){
 	var pause = true;
 	var world = this;
 
+	//add events
+	this.events = new THREE.EventDispatcher();
+
 	//create projection
 	this.projection = projection;
 
@@ -1750,6 +1753,8 @@ module.exports = function(canvas, projection, FXlist){
 	//add preloader
 	this.preloader = new IO.classes.Loader();
 
+	world.events.dispatchEvent({ type: 'created' });
+
 	//shortcut to preloader
 	this.load = function(list){
 
@@ -1770,6 +1775,7 @@ module.exports = function(canvas, projection, FXlist){
 
 		if(startRender){
 			world.render.start();
+			world.events.dispatchEvent({ type: 'start' });
 		}
 
 	};
@@ -1777,18 +1783,29 @@ module.exports = function(canvas, projection, FXlist){
 	this.stop = function(){
 		pause = true;
 		world.render.stop();
+
+		world.events.dispatchEvent({ type: 'stop' });
 	};
 
 	//resize
 	var resize = function(){
 
-		var w = this.renderer.domElement.offsetWidth;
-		var h = this.renderer.domElement.offsetHeight;
+		console.log('resize triggered');
+		var w = this.renderer.domElement.parentNode.offsetWidth;
+		var h = this.renderer.domElement.parentNode.offsetHeight;
 
 		this.renderer.setSize( w, h );
 		this.camera.aspect = w / h;
 		this.camera.updateProjectionMatrix();
 		this.FX.resize(w, h);
+
+		//make public
+		this.size = {
+			width: w,
+			height: h
+		};
+
+		world.events.dispatchEvent({ type: 'resize', size: this.size });
 
 	}.bind(this);
 
@@ -1806,6 +1823,7 @@ module.exports = function(canvas, projection, FXlist){
 		this.group = undefined;
 		this.mouse = undefined;
 		this.render = undefined;
+		this.events = undefined;
 
 		//remove DOM element
 		var elem = this.renderer.domElement;
@@ -1816,13 +1834,17 @@ module.exports = function(canvas, projection, FXlist){
 	}.bind(this);
 
 	//events
-	window.addEventListener('resize', resize, false );
+	window.addEventListener('resize', resize, false);
+	resize();
 
-	//make sure event listeners are destroyed
+	//make sure event listeners and garbages are destroyed
 	this.destroy = function(){
+
 		world.render.stop(true);
 		window.removeEventListener('resize', resize, false);
+		world.events.dispatchEvent({ type: 'destroy' });
 		destroyWebGL();
+
 	};
 
 };
@@ -2623,18 +2645,10 @@ module.exports = function(source, props) {
 },{}],26:[function(require,module,exports){
 var THREE = require('three');
 
-module.exports = function(canvas, minHeight){
+module.exports = function(canvas){
 
-	var width = window.innerWidth;
-	var height = window.innerHeight;
-
-	if(width < 1024){
-		width = 1024;
-	}
-
-	if(minHeight){
-		height = minHeight;
-	}
+	var width = canvas.parentNode.offsetWidth;
+	var height = canvas.parentNode.offsetHeight;
 
 	this.renderer = new THREE.WebGLRenderer( { antialias: true } );
 	this.renderer.setClearColor( 0xFFFFFF, 1 );

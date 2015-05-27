@@ -75,9 +75,21 @@ IO.FXlib.blurredMenu = function(scene, camera, renderer, world){
 
     };
 
+    //listen to resize
+    world.events.addEventListener('resize', function(evt){
+
+        var height = 100;
+        var bottom = evt.size.height;
+        var top = bottom - height;
+        var threshold = 1 - (top / bottom);
+        this.blurredMenu.uniforms.threshold.value = threshold;
+
+        console.log('resize blurred menu')
+
+    }.bind(this));
+
     //init
     this.blurredMenu = new ShaderPass(shaderVert);
-    // this.blurredMenu.uniforms.h.value
     this.composer.addPass(this.blurredMenu);
 
 };
