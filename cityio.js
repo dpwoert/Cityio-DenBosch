@@ -198,17 +198,23 @@ module.exports = function(world){
 	};
 
 	//add all buildings from list
-	var buildings = data.get().splice(0,15000);
-	// var buildings = data.get();
+	var buildings = data.get();
 	for( var i = 0 ; i < buildings.length ; i++ ){
 
 		this.render.push(function(){
 
 			createBuilding( this.object.get3D(world.projection), this.object.properties );
 
+			//clear from memory
+			this.object.destroy();
+			this.object = undefined;
+
 			//end?
 			if(this.current >= buildings.length - 1){
 				finalise();
+
+				//clear from memory
+				data.destroy();
 			}
 
 		}.bind({ object: buildings[i], current: i }));
@@ -301,11 +307,17 @@ module.exports = function(world){
 		this.render.push(function(){
 
 			createTube( this.object.get3D(world.projection, options.height) );
+
+			//clear from memory
+			this.object.destroy();
 			this.object = undefined;
 
 			//end?
 			if(this.current >= roads.length - 1){
 				finalise();
+
+				//clear from memory
+				data.destroy();
 			}
 
 		}.bind({ object: roads[i], current: i }));
