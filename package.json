@@ -26,12 +26,14 @@
         "traffic",
         "pollution"
     ],
-    "dependencies": {
-
-    },
+    "dependencies": {},
     "devDependencies": {
-        "gulp": "3.8.1",
         "connect": "2.14.4"
+    },
+    "scripts": {
+        "server": "node ./build/server.js",
+        "update": "node ./build/create-script.js",
+        "import": "node ./build.js"
     },
     "license": "GPL"
 }
