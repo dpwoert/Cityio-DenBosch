@@ -1,168 +1,204 @@
-var IO = require('../../index.js');
+var IO = require('cityio');
 
-module.exports = function(){
+console.log('start fetching data for Den Bosch demo. warning!: can take hours...');
 
-    console.log('start fetching data for Den Bosch demo. warning!: can take hours...');
+//grande
+// var min = new IO.classes.Geo(5.246658, 51.679408);
+// var max = new IO.classes.Geo(5.351028, 51.727281);
 
-    //grande
-    // var min = new IO.classes.Geo(5.246658, 51.679408);
-    // var max = new IO.classes.Geo(5.351028, 51.727281);
+//medium
+var min = new IO.classes.Geo(5.28222, 51.68144);
+var max = new IO.classes.Geo(5.32891, 51.72081);
 
-    //medium
-    var min = new IO.classes.Geo(5.28222, 51.68144);
-    var max = new IO.classes.Geo(5.32891, 51.72081);
+//petit
+// var min = new IO.classes.Geo(5.30000, 51.69000);
+// var max = new IO.classes.Geo(5.31157, 51.69401);
 
-    //petit
-    // var min = new IO.classes.Geo(5.30000, 51.69000);
-    // var max = new IO.classes.Geo(5.31157, 51.69401);
+//map for buildings (panden)
+var buildings = new IO.classes.Map();
 
-    //map for buildings (panden)
-    var buildings = new IO.classes.Map();
+//map for streets & rails
+var streets = new IO.classes.Map();
+var rails = new IO.classes.Map();
 
-    //map for streets
-    var streets = new IO.classes.Map();
+//map for areas
+var areas = new IO.classes.Map();
 
-    //map for areas
-    var areas = new IO.classes.Map();
+//scrapers not part of standard cityIO library
+var soundData = require('./build/soundData.js');
+var polutionData = require('./build/polutionData.js');
 
-    //scrapers not part of standard cityIO library
-    var soundData = require('./build/soundData.js');
-    var polutionData = require('./build/polutionData.js');
+//fetch buildings
+var fetch = function(){
 
-    //fetch buildings
-    var fetch = function(){
+    buildings
 
-        buildings
+        //get data from Kadaster (Basis Administratie Gemeentes)
+        // .scraper(IO.scrapers.BAG, { 'min': min, 'max': max })
+        .scraper(IO.scrapers.OSM, {
+            preset: 'buildings',
+            bbox: [min,max]
+        })
 
-            //get data from Kadaster (Basis Administratie Gemeentes)
-            // .scraper(IO.scrapers.BAG, { 'min': min, 'max': max })
-            .scraper(IO.scrapers.OSM, {
-                preset: 'buildings',
-                bbox: [min,max]
-            })
+        //get height data from AHN (Algemeen Hoogtebestand Nederland)
+        .action(IO.scrapers.AHN)
 
-            //get height data from AHN (Algemeen Hoogtebestand Nederland)
-            .action(IO.scrapers.AHN)
+        //remove double values from geoJSON
+        // .action(IO.tools.removeDoubles)
 
-            //remove double values from geoJSON
-            // .action(IO.tools.removeDoubles)
+        //get polution data from NSL (Nationaal Samenwerkingsverband Luchtkwaliteit)
+        .action(polutionData, { file: './assets/data/NSL-2011-denBosch.json' })
 
-            //get polution data from NSL (Nationaal Samenwerkingsverband Luchtkwaliteit)
-            .action(polutionData, { file: './assets/data/NSL-2011-denBosch.json' })
+        //make whitelist of data to keep
+        .action(IO.tools.filter, {
+            geometry: true,
+            properties: {
+                height: true,
+                floor: true,
+                no2: true,
+                pm10: true,
+                pm25: true
+            }
+        })
 
-            //make whitelist of data to keep
-            .action(IO.tools.filter, {
-                geometry: true,
-                properties: {
-                    height: true,
-                    floor: true,
-                    no2: true,
-                    pm10: true,
-                    pm25: true
-                }
-            })
+        //convert to topojson to save bits & bytes
+        .action(IO.tools.topoJSON, 'buildings')
 
-            //convert to topojson to save bits & bytes
-            .action(IO.tools.topoJSON, 'buildings')
+        //save
+        .save('./maps/buildings.topojson');
 
-            //save
-            .save('./maps/buildings.topojson');
+    return buildings.end();
 
-        return buildings.end();
+}()
 
-    }()
+//fetch streets
+.then(function(){
 
-    //fetch streets
-    .then(function(){
+    streets
 
-        streets
+        //get data from Open Street Maps
+        .scraper(IO.scrapers.OSM, {
+            preset: ['roads'],
+            bbox: [min,max]
+        })
 
-            //get data from Open Street Maps
-            .scraper(IO.scrapers.OSM, {
-                preset: ['rails','roads'],
-                bbox: [min,max]
-            })
+        //make whitelist of data to keep
+        .action(IO.tools.filter, {
+            geometry: true,
+            properties: {
+                type: true,
+                highway: true,
+                railway: true,
+                soundDay: true,
+                soundNight: true
+            }
+        })
 
-            //make whitelist of data to keep
-            .action(IO.tools.filter, {
-                geometry: true,
-                properties: {
-                    type: true,
-                    highway: true,
-                    railway: true,
-                    soundDay: true,
-                    soundNight: true
-                }
-            })
+        //split paths to ensure points are at an interval
+        .action(IO.tools.splitPath, 20)
 
-            //split paths to ensure points are at an interval
-            .action(IO.tools.splitPath, 20)
+        //day value of sound
+        .action(soundData)
 
-            //day value of sound
-            .action(soundData)
+        //convert to topojson to save bits & bytes
+        .action(IO.tools.topoJSON, 'streets')
 
-            //convert to topojson to save bits & bytes
-            .action(IO.tools.topoJSON, 'streets')
+        //save
+        .save('./maps/streets.topojson');
 
-            //save
-            .save('./maps/streets.topojson');
+    return streets.end();
 
-        return streets.end();
+})
 
-    })
+//fetch rails
+.then(function(){
 
-    //fetch areas
-    .then(function(){
+    rails
 
-        areas
+        //get data from Open Street Maps
+        .scraper(IO.scrapers.OSM, {
+            preset: ['rails'],
+            bbox: [min,max]
+        })
 
-            //get data from Open Street Maps
-            .scraper(IO.scrapers.OSM, {
-                preset: ['grass','water','neighbourhoods'],
-                bbox: [min, max]
-            })
+        //make whitelist of data to keep
+        .action(IO.tools.filter, {
+            geometry: true,
+            properties: {
+                type: true,
+                highway: true,
+                railway: true,
+                soundDay: true,
+                soundNight: true
+            }
+        })
 
-            //remove double values from geoJSON
-            .action(IO.tools.removeDoubles)
+        //split paths to ensure points are at an interval
+        .action(IO.tools.splitPath, 20)
 
-            //make whitelist of data to keep
-            .action(IO.tools.filter, {
-                geometry: true,
-                // properties: {
-                //     tags: {
-                //         landuse: true,
-                //         boundary: true
-                //     }
-                // }
-                properties: {
-                    tags: true
-                }
-            })
+        //day value of sound
+        .action(soundData)
 
-            //convert to topojson to save bits & bytes
-            .action(IO.tools.topoJSON, 'areas')
+        //convert to topojson to save bits & bytes
+        .action(IO.tools.topoJSON, 'rails')
 
-            //save
-            .save('./maps/areas.topojson');
+        //save
+        .save('./maps/rails.topojson');
 
-        return areas.end();
+    return rails.end();
 
-    })
+})
 
-    //build script
-    .then(function(){
+//fetch areas
+.then(function(){
 
-        //create cityio script file
-        var createScript = require('./build/create-script.js');
-        createScript();
+    areas
 
-    })
+        //get data from Open Street Maps
+        .scraper(IO.scrapers.OSM, {
+            preset: ['grass','water','neighbourhoods'],
+            bbox: [min, max]
+        })
 
-    //done
-    .then(function(){
+        //remove double values from geoJSON
+        .action(IO.tools.removeDoubles)
 
-        console.log('data for Den Bosch demo fetched');
+        //make whitelist of data to keep
+        .action(IO.tools.filter, {
+            geometry: true,
+            // properties: {
+            //     tags: {
+            //         landuse: true,
+            //         boundary: true
+            //     }
+            // }
+            properties: {
+                tags: true
+            }
+        })
 
-    });
+        //convert to topojson to save bits & bytes
+        .action(IO.tools.topoJSON, 'areas')
 
-};
+        //save
+        .save('./maps/areas.topojson');
+
+    return areas.end();
+
+})
+
+//build script
+.then(function(){
+
+    //create cityio script file
+    var createScript = require('./build/create-script.js');
+    createScript();
+
+})
+
+//done
+.then(function(){
+
+    console.log('data for Den Bosch demo fetched');
+
+});
