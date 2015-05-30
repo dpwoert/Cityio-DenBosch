@@ -1,4 +1,4 @@
-var IO = require('../../../index.js');
+var IO = require('cityio');
 var fs = require('fs');
 
 module.exports = function(finish, data, options){
