@@ -28,7 +28,8 @@
     ],
     "dependencies": {},
     "devDependencies": {
-        "connect": "2.14.4"
+        "connect": "2.14.4",
+        "q": "1.1.2"
     },
     "scripts": {
         "server": "node ./build/server.js",
