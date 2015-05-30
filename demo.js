@@ -60,7 +60,20 @@ var init = function(){
         })
         .build(IO.build.buildings);
 
-    //roads viz - day
+    //roads - day + night
+    roads
+        .data(roadsMap)
+        .options({
+            color: '#ff0000',
+            maxSegments: 10,
+            height: function(properties, index){
+                return Math.pow( (properties.day[index] - 50), 1.3);
+            }
+        })
+        .build(IO.build.soundRoads, {time: 'day'})
+        .build(IO.build.soundRoads, {time: 'night'});
+
+    //rails - day + night
     roads
         .data(roadsMap)
         .options({
