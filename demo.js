@@ -1,4 +1,4 @@
-var init = function(){
+var startIO = function(){
 
     //get element
     var element = document.getElementById('canvas');
@@ -9,8 +9,6 @@ var init = function(){
 
     //create 3d world
     var world = new IO.classes.World(element, projection, ['tiltShift','blurredMenu']);
-    // var world = new IO.classes.World(element, projection);
-    window.world = world;
 
     //tilt shift
     world.FX.setBlur(5, 0.55, 1.4);
@@ -106,34 +104,79 @@ var init = function(){
         })
         .build(IO.build.areas)
 
+    //create background
+    var bg = $('#intro').triangleBg();
+
+    //create progress loader
+    var $loader = $('#intro .loader');
+    var $indicator = $('#intro .loader .indicator');
+    var maxWidth = $loader.width();
+
+    //preloader status
+    world.events.addEventListener('preloader', function(evt){
+
+        if( evt.state === 'downloading' ){
+            $loader.addClass('downloading').removeClass('rendering start loaded');
+        }
+        else if( evt.state === 'rendering' ){
+            $loader.addClass('rendering').removeClass('downloading start loaded');
+        }
+        else if( evt.state === 'loaded' ){
+            $loader.addClass('loaded').removeClass('downloading rendering start');
+        }
+
+    });
+
+    //procent update
+    world.events.addEventListener('preloader-update', function(evt){
+
+        var progress = evt.progress;
+        var width = maxWidth * progress;
+
+        $indicator.css('width', width);
+
+    });
+
     //load & start
-    world
-        // .load([areas])
-        // .load([areas, roads])
-        .load([buildings, areas, roads])
-        .then(function(){
+    $loader.click(function(){
+
+        if(world.preloader.state === 'idle'){
+
+            world
+                .load([buildings, areas, roads])
+                .then(function(){
+
+                    // world.start();
+
+                    var goTo = new IO.classes.Geo(5.246658, 51.679408).setAltitude(300);
+                    var lookAt = new IO.classes.Geo(5.246658, 51.89408).setAltitude(100);
+                    var flyAround = new IO.classes.Geo(5.30299, 51.68965).setAltitude(300);
+
+                    //rotate camera
+                	world.camera
+                		.gotoGeo(goTo)
+                		.lookAtGeo(lookAt);
+
+                	//start with flying around
+                	world.camera.flyAround(flyAround, 500);
+
+                })
+                .catch(function(e){
+                    console.stack(e);
+                });
+
+        } else if(world.preloader.state === 'loaded') {
+
+            bg.destroy();
+            $('#intro').hide().remove();
 
             world.start();
 
-            var goTo = new IO.classes.Geo(5.246658, 51.679408).setAltitude(300);
-            var lookAt = new IO.classes.Geo(5.246658, 51.89408).setAltitude(100);
-            var flyAround = new IO.classes.Geo(5.30299, 51.68965).setAltitude(300);
+        }
 
-            //rotate camera
-        	world.camera
-        		.gotoGeo(goTo)
-        		.lookAtGeo(lookAt);
-
-        	//start with flying around
-        	world.camera.flyAround(flyAround, 500);
-
-        })
-        .catch(function(e){
-            console.stack(e);
-        });
-
+    });
 
 };
 
 //when DOM is ready load CityIO
-document.addEventListener("DOMContentLoaded", init);
+document.addEventListener("DOMContentLoaded", startIO);

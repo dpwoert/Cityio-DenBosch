@@ -59,7 +59,8 @@ IO.FXlib.blurredMenu = function(scene, camera, renderer, world){
         			"sum += texture2D( tDiffuse, vec2( vUv.x, vUv.y + 3.0 * vv ) ) * 0.0918;",
         			"sum += texture2D( tDiffuse, vec2( vUv.x, vUv.y + 4.0 * vv ) ) * 0.051;",
 
-        			"gl_FragColor = mix(sum, vec4(color,1), 0.2);",
+        			"gl_FragColor = sum;",
+        			// "gl_FragColor = mix(sum, vec4(color,1), 0.2);",
 
                 "}",
 

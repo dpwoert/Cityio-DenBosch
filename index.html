@@ -6,12 +6,37 @@
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
         <link rel="stylesheet" type="text/css" href="style.css"></link>
         <script src="cityio.js"></script>
+        <script src="assets/js/jquery-2.1.4.min.js"></script>
         <script src="assets/js/soundroads.js"></script>
         <script src="assets/js/blurred-menu.js"></script>
+        <script src="assets/js/triangle-bg.js"></script>
         <script src="demo.js"></script>
 	</head>
 
 	<body>
+
+		<div id="intro">
+
+			<!-- video -->
+			<video autoplay loop>
+				<source src="/assets/images/intro.mp4" type="video/mp4" />
+				<source src="/assets/images/intro.webm" type="video/webm" />
+			</video>
+
+			<!-- blurred background -->
+			<div class="background"></div>
+
+			<!-- loader/button -->
+			<div class="loader start">
+
+				<div class="start">load map</div>
+				<div class="done">see map</div>
+				<div class="indicator"></div>
+				<div class="buffering"></div>
+
+			</div>
+
+		</div>
 
 		<div id="canvas"></div>
 
