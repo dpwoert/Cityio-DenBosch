@@ -124,7 +124,6 @@ $.fn.triangleBg = function(){
     triangle.material.side = THREE.DoubleSide;
     triangle.dynamic = true;
     triangle.material.map.needsUpdate = true;
-    console.log(triangle)
 
     //add objects to scene
     scene.add(bg);
