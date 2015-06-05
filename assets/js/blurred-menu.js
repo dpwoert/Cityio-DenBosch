@@ -79,13 +79,11 @@ IO.FXlib.blurredMenu = function(scene, camera, renderer, world){
     //listen to resize
     world.events.addEventListener('resize', function(evt){
 
-        var height = 100;
+        var height = 50;
         var bottom = evt.size.height;
         var top = bottom - height;
         var threshold = 1 - (top / bottom);
         this.blurredMenu.uniforms.threshold.value = threshold;
-
-        console.log('resize blurred menu')
 
     }.bind(this));
 

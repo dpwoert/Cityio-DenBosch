@@ -112,6 +112,9 @@ var startIO = function(){
     var $indicator = $('#intro .loader .indicator');
     var maxWidth = $loader.width();
 
+    //create dropdown
+    $('.menu-item-dropdown').dropdown();
+
     //preloader status
     world.events.addEventListener('preloader', function(evt){
 
@@ -173,6 +176,45 @@ var startIO = function(){
             world.start();
 
         }
+
+    });
+
+    //switch camera points
+    $('.camera-switch').click(function(){
+
+        var point = $(this).attr('rel');
+
+        switch(point){
+
+            case '1':
+                var flyAround = new IO.classes.Geo(5.30585, 51.68476).setAltitude(100);
+                world.camera.flyAround(flyAround, 100);
+            break;
+
+            case '2':
+                var goTo = new IO.classes.Geo(5.29774, 51.68793).setAltitude(200)
+                var lookAt= new IO.classes.Geo(5.29976, 51.68809).setAltitude(10);
+                world.camera.animateTo([goTo, lookAt]);
+            break;
+
+        }
+
+    });
+
+    //switch between day/night
+    $('.menu-item-toggle').click(function(){
+
+        console.log('switch');
+
+        _cycle = cycle.getTime();
+
+        //reverse
+        _cycle = _cycle === 0 ? 1 : 0;
+        cycle.setTime(_cycle);
+
+        //update toggle
+        $(this).find('span').toggleClass('selected');
+
 
     });
 

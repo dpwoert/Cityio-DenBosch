@@ -588,7 +588,7 @@ module.exports = function(world, time){
         if(_time < 0) time = 0;
 
         //update fog
-        var fogColor = fog.day.lerp(fog.night, _time);
+        var fogColor = fog.day.clone().lerp(fog.night, _time);
         fog.color.copy(fogColor);
 
         //animate BG color
@@ -643,6 +643,10 @@ module.exports = function(world, time){
             object[key] = time;
         });
 
+    };
+
+    this.getTime = function(){
+        return time;
     };
 
 };

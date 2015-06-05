@@ -4,11 +4,13 @@
 		<title>CityIO Den Bosch demo</title>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-        <link rel="stylesheet" type="text/css" href="style.css"></link>
+		<link href='http://fonts.googleapis.com/css?family=Roboto:400,500' rel='stylesheet' type='text/css'>
+		<link rel="stylesheet" type="text/css" href="style.css"></link>
         <script src="cityio.js"></script>
         <script src="assets/js/jquery-2.1.4.min.js"></script>
         <script src="assets/js/soundroads.js"></script>
         <script src="assets/js/blurred-menu.js"></script>
+        <script src="assets/js/dropdown.js"></script>
         <script src="assets/js/triangle-bg.js"></script>
         <script src="demo.js"></script>
 	</head>
@@ -38,7 +40,42 @@
 
 		</div>
 
-		<div id="canvas"></div>
+		<div id="canvas">
+
+			<div class="menubar">
+
+				<div class="logo"></div>
+
+				<ul class="menu-items">
+
+					<li class="menu-item menu-item-dropdown">
+
+						<span>locations</span>
+
+						<ul class="dropdown">
+
+							<li class="dropdown-item camera-switch" rel="1">Zuidwal</li>
+							<li class="dropdown-item camera-switch" rel="2">Uilenburg</li>
+							<li class="dropdown-item camera-switch" rel="3">Markt</li>
+							<li class="dropdown-item camera-switch" rel="4">Hintham</li>
+
+						</ul>
+
+					</li>
+
+					<li class="menu-item">Legend</li>
+
+					<li class="menu-item menu-item-toggle">
+						<span class="selected">day</span>/<span>night</span>
+					</li>
+
+					<li class="menu-item">info</li>
+
+				</ul>
+
+			</div>
+
+		</div>
 
     </body>
 

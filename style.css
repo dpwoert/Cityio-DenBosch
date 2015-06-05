@@ -8,6 +8,10 @@ html, body{
     padding: 0
 }
 
+ul{
+    list-style: none;
+}
+
 #canvas, canvas{
     position: absolute;
     top: 0;
@@ -16,6 +20,7 @@ html, body{
     height: 100%;
 }
 
+/* intro */
 #intro{
     position: absolute;
     top: 0;
@@ -33,6 +38,7 @@ html, body{
 	/*display: none;*/
 }
 
+/* loader */
 .loader{
     width: 200px;
     height: 30px;
@@ -76,4 +82,91 @@ html, body{
 .loader.downloading .buffering,
 .loader.loaded .done {
     display: block;
+}
+
+/* menubar */
+.menubar{
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 60px;
+    z-index: 2;
+
+    font-family: 'Roboto', sans-serif;
+    background: -moz-linear-gradient(top,  rgba(0,0,0,0.21) 0%, rgba(0,0,0,0.1) 100%); /* FF3.6+ */
+    background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(0,0,0,0.21)), color-stop(100%,rgba(0,0,0,0.1))); /* Chrome,Safari4+ */
+    background: -webkit-linear-gradient(top,  rgba(0,0,0,0.21) 0%,rgba(0,0,0,0.1) 100%); /* Chrome10+,Safari5.1+ */
+    background: -o-linear-gradient(top,  rgba(0,0,0,0.21) 0%,rgba(0,0,0,0.1) 100%); /* Opera 11.10+ */
+    background: -ms-linear-gradient(top,  rgba(0,0,0,0.21) 0%,rgba(0,0,0,0.1) 100%); /* IE10+ */
+    background: linear-gradient(to bottom,  rgba(0,0,0,0.21) 0%,rgba(0,0,0,0.1) 100%); /* W3C */
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#36000000', endColorstr='#1a000000',GradientType=0 ); /* IE6-9 */
+
+}
+
+.menubar .logo{
+    float: left;
+    margin-top: 18px;
+    margin-left: 18px;
+    height: 24px;
+    width: 200px;
+
+    background-image: url('assets/images/logo.svg');
+    background-repeat: no-repeat;
+    background-size: contain;
+}
+
+.menubar .menu-items{
+    float: right;
+    margin: 0;
+    margin-right: 16px;
+
+    line-height: 60px;
+    color: white;
+}
+
+.menubar .menu-item{
+    list-style: none;
+    padding: 0;
+    display: inline-block;
+
+    margin-right: 40px;
+    cursor: pointer;
+}
+
+.menubar .menu-item-dropdown span:after{
+    content: '▾';
+    display: inline-block;
+    margin-left: 4px;
+}
+
+.menubar .menu-item-toggle span{
+    opacity: 0.3;
+}
+
+.menubar .menu-item-toggle span.selected{
+    opacity: 1;
+}
+
+.menubar .dropdown{
+    display: none;
+}
+
+.menubar .dropdown.visible{
+    display: block;
+
+    position: absolute;
+    background: rgba(235,150,150,0.9);
+    line-height: 35px;
+    padding: 15px 20px;
+    padding-top: 50px;
+    top: 0;
+
+    z-index: -1;
+    margin-left: -20px;
+    width: 80px;
+}
+
+.menubar .dropdown{
+
 }
