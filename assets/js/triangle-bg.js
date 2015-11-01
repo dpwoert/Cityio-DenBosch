@@ -15,10 +15,10 @@ $.fn.triangleBg = function(){
 
         //create gradient
         var gradient = context.createLinearGradient(0, 0, 0, 500);
-        gradient.addColorStop(0, '#ff0000');
+        gradient.addColorStop(0, '#f54f4f');
         gradient.addColorStop(1, '#000000');
 
-        context.globalAlpha = 0.75;
+        context.globalAlpha = 0.9;
         context.fillStyle = '#ffffff';
         context.fillRect(0, 0, 500, 500);
 
@@ -92,7 +92,7 @@ $.fn.triangleBg = function(){
 
     //background texture
     var bg = new THREE.Mesh(
-        new THREE.PlaneGeometry(width, width),
+        new THREE.PlaneGeometry(width, height * (16/9)),
         createTexture(video)
     );
 
